@@ -48,8 +48,7 @@ def trainingAdaboostGetDS(iterateNum=40):
         errorCount = 0.0
         for j in range(testCount):
             testWordsCount = boostNaiveBayes.setOfWordsToVecTor(vocabularyList, testWords[j])
-            ps, ph, smsType = boostNaiveBayes.classify(pWordsSpamicity, pWordsHealthy,
-                                                       DS, pSpam, testWordsCount)
+            ps, ph, smsType = boostNaiveBayes.classify(pWordsSpamicity, pWordsHealthy,DS, pSpam, testWordsCount)
 
             if smsType != testWordsType[j]:
                 errorCount += 1
