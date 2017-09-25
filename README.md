@@ -1,5 +1,5 @@
 # NaiveBayesSpamFilter
-利用朴素贝叶斯算法实现垃圾邮件的过滤，并结合Adaboost改进该算法。
+Naive bayes to filter spam，Use the idea of adaboost, but not typical adaboost
 
 ## 1 Naive Bayes spam filtering
 &emsp;&emsp;假设邮件的内容中包含的词汇为Wi，垃圾邮件Spam，正常邮件ham。
