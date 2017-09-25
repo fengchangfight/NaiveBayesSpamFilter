@@ -10,11 +10,11 @@ import numpy as np
 
 
 def simpleTest():
-    # 加载训练好的模型信息
+    # load saved model from training
     vocabularyList, pWordsSpamicity, pWordsHealthy, pSpam = \
         naiveBayes.getTrainedModelInfo()
 
-    # 加载测试数据
+    # load test data
     filename = '../emails/test/test.txt'
     smsWords, classLables = naiveBayes.loadSMSData(filename)
 
@@ -25,13 +25,13 @@ def simpleTest():
 
 def testClassifyErrorRate():
     """
-    测试分类的错误率
+    error rate test
     :return:
     """
     filename = '../emails/training/SMSCollection.txt'
     smsWords, classLables = naiveBayes.loadSMSData(filename)
 
-    # 交叉验证
+    # cross validation
     testWords = []
     testWordsType = []
 
@@ -44,23 +44,23 @@ def testClassifyErrorRate():
         del (classLables[randomIndex])
 
     vocabularyList = naiveBayes.createVocabularyList(smsWords)
-    print "生成语料库！"
+    print "generate one hot vector based on the word set！"
     trainMarkedWords = naiveBayes.setOfWordsListToVecTor(vocabularyList, smsWords)
-    print "数据标记完成！"
-    # 转成array向量
+    print "mark data！"
+    # convert to nd array
     trainMarkedWords = np.array(trainMarkedWords)
-    print "数据转成矩阵！"
+    print "data -> matrix！"
     pWordsSpamicity, pWordsHealthy, pSpam = naiveBayes.trainingNaiveBayes(trainMarkedWords, classLables)
 
     errorCount = 0.0
     for i in range(testCount):
         smsType = naiveBayes.classify(vocabularyList, pWordsSpamicity,
                                       pWordsHealthy, pSpam, testWords[i])
-        print '预测类别：', smsType, '实际类别：', testWordsType[i]
+        print 'predict type：', smsType, 'actual type：', testWordsType[i]
         if smsType != testWordsType[i]:
             errorCount += 1
 
-    print '错误个数：', errorCount, '错误率：', errorCount / testCount
+    print 'error count：', errorCount, 'error rate：', errorCount / testCount
 
 
 if __name__ == '__main__':

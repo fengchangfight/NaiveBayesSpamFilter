@@ -6,29 +6,29 @@
 """
 import numpy as np
 
-
+# ==fc==
 def textParser(text):
     """
-    对SMS预处理，去除空字符串，并统一小写
+    preprocessing，remove empty string, to lower case
     :param text:
     :return:
     """
     import re
-    regEx = re.compile(r'[^a-zA-Z]|\d')  # 匹配非字母或者数字，即去掉非字母非数字，只留下单词
+    regEx = re.compile(r'[^a-zA-Z]|\d')  # remove everything except for words and numbers using regular expression
     words = regEx.split(text)
-    # 去除空字符串，并统一小写
+
     words = [word.lower() for word in words if len(word) > 0]
     return words
 
-
+# ==fc==
 def loadSMSData(fileName):
     """
-    加载SMS数据
+    load SMS data from file name
     :param fileName:
     :return:
     """
     f = open(fileName)
-    classCategory = []  # 类别标签，1表示是垃圾SMS，0表示正常SMS
+    classCategory = []  # 1: spam, 0: healthy
     smsWords = []
     for line in f.readlines():
         linedatas = line.strip().split('\t')
@@ -36,28 +36,30 @@ def loadSMSData(fileName):
             classCategory.append(0)
         elif linedatas[0] == 'spam':
             classCategory.append(1)
-        # 切分文本
+        # to word list
         words = textParser(linedatas[1])
+        # to list of word list
         smsWords.append(words)
     return smsWords, classCategory
 
-
+# ==fc==
 def createVocabularyList(smsWords):
     """
-    创建语料库
+    create vector of word set
     :param smsWords:
     :return:
     """
     vocabularySet = set([])
     for words in smsWords:
+        # union set
         vocabularySet = vocabularySet | set(words)
     vocabularyList = list(vocabularySet)
     return vocabularyList
 
-
+# ==fc==
 def getVocabularyList(fileName):
     """
-    从词汇列表文件中获取语料库
+    get vocabulary list from file
     :param fileName:
     :return:
     """
@@ -66,10 +68,10 @@ def getVocabularyList(fileName):
     fr.close()
     return vocabularyList
 
-
+# ==fc==
 def setOfWordsToVecTor(vocabularyList, smsWords):
     """
-    SMS内容匹配预料库，标记预料库的词汇出现的次数
+    mark word occurence in a way like this vector: [0,0,1,5,0,3,4...]
     :param vocabularyList:
     :param smsWords:
     :return:
@@ -80,10 +82,10 @@ def setOfWordsToVecTor(vocabularyList, smsWords):
             vocabMarked[vocabularyList.index(smsWord)] += 1
     return vocabMarked
 
-
+# ==fc==
 def setOfWordsListToVecTor(vocabularyList, smsWordsList):
     """
-    将文本数据的二维数组标记
+    stack setOfWordsToVecTor, return a 2d array
     :param vocabularyList:
     :param smsWordsList:
     :return:
@@ -95,60 +97,43 @@ def setOfWordsListToVecTor(vocabularyList, smsWordsList):
     return vocabMarkedList
 
 
+# ==fc==
 def trainingNaiveBayes(trainMarkedWords, trainCategory):
     """
-    训练数据集中获取语料库中词汇的spamicity：P（Wi|S）
+    calculate spamicity：P（Wi|S）
     :param trainMarkedWords: 按照语料库标记的数据，二维数组
     :param trainCategory:
     :return:
     """
     numTrainDoc = len(trainMarkedWords)
     numWords = len(trainMarkedWords[0])
-    # 是垃圾邮件的先验概率P(S)
+    # prior probability of spam P(S)
     pSpam = sum(trainCategory) / float(numTrainDoc)
 
-    # 统计语料库中词汇在S和H中出现的次数
     wordsInSpamNum = np.ones(numWords)
     wordsInHealthNum = np.ones(numWords)
     spamWordsNum = 2.0
     healthWordsNum = 2.0
     for i in range(0, numTrainDoc):
-        if trainCategory[i] == 1:  # 如果是垃圾SMS或邮件
+        if trainCategory[i] == 1:  # if spam
             wordsInSpamNum += trainMarkedWords[i]
-            spamWordsNum += sum(trainMarkedWords[i])  # 统计Spam中语料库中词汇出现的总次数
+            spamWordsNum += sum(trainMarkedWords[i])  # total spam occurance
         else:
             wordsInHealthNum += trainMarkedWords[i]
             healthWordsNum += sum(trainMarkedWords[i])
-    # 计算语料库中词汇的spamicity：P（Wi|S）和P（Wi|H）
-    # pWordsSpamicity = []
-    #
-    # for num in wordsInSpamNum:
-    #     if num == 0:
-    #         pWordsSpamicity.append(np.log(pSpam))
-    #     else:
-    #         pWordsSpamicity.append(np.log(num / spamWordsNum))
-    #
-    # pWordsHealthy = []
-    # for num1 in wordsInHealthNum:
-    #     if num1 == 0:
-    #         pWordsHealthy.append(np.log(1-pSpam))
-    #     else:
-    #         pWordsHealthy.append(np.log(num1 / healthWordsNum))
-    #
-    # return np.array(pWordsSpamicity), np.array(pWordsHealthy), pSpam
 
     pWordsSpamicity = np.log(wordsInSpamNum / spamWordsNum)
     pWordsHealthy = np.log(wordsInHealthNum / healthWordsNum)
 
     return pWordsSpamicity, pWordsHealthy, pSpam
 
-
+# ==fc==
 def getTrainedModelInfo():
     """
-    获取训练的模型信息
+    get training model
     :return:
     """
-    # 加载训练获取的语料库信息
+    # load training info from training
     vocabularyList = getVocabularyList('vocabularyList.txt')
     pWordsHealthy = np.loadtxt('pWordsHealthy.txt', delimiter='\t')
     pWordsSpamicity = np.loadtxt('pWordsSpamicity.txt', delimiter='\t')
@@ -158,10 +143,10 @@ def getTrainedModelInfo():
 
     return vocabularyList, pWordsSpamicity, pWordsHealthy, pSpam
 
-
+# ==fc==
 def classify(vocabularyList, pWordsSpamicity, pWordsHealthy, pSpam, testWords):
     """
-    计算联合概率进行分类
+    calculate joint probability
     :param vocabularyList:
     :param pWordsSpamicity:
     :param pWordsHealthy:
@@ -171,7 +156,7 @@ def classify(vocabularyList, pWordsSpamicity, pWordsHealthy, pSpam, testWords):
     """
     testWordsCount = setOfWordsToVecTor(vocabularyList, testWords)
     testWordsMarkedArray = np.array(testWordsCount)
-    # 计算P(Ci|W)，W为向量。P(Ci|W)只需计算P(W|Ci)P(Ci)
+    # to calculate P(Ci|W)，W is vector。P(Ci|W) only need to calculate P(W|Ci)P(Ci)
     p1 = sum(testWordsMarkedArray * pWordsSpamicity) + np.log(pSpam)
     p0 = sum(testWordsMarkedArray * pWordsHealthy) + np.log(1 - pSpam)
     if p1 > p0:
