@@ -18,7 +18,7 @@ def trainingAdaboostGetDS(iterateNum=40):
     filename = '../emails/training/SMSCollection.txt'
     smsWords, classLables = boostNaiveBayes.loadSMSData(filename)
 
-    # 交叉验证
+    # cross validation
     testWords = []
     testWordsType = []
 
@@ -29,17 +29,14 @@ def trainingAdaboostGetDS(iterateNum=40):
         testWords.append(smsWords[randomIndex])
         del (smsWords[randomIndex])
         del (classLables[randomIndex])
-    """
-    训练阶段，可将选择的vocabularyList也放到整个循环中，以选出
-    错误率最低的情况，获取最低错误率的vocabularyList
-    """
+
     vocabularyList = boostNaiveBayes.createVocabularyList(smsWords)
-    print "生成语料库！"
+    print "Generating vector"
     trainMarkedWords = boostNaiveBayes.setOfWordsListToVecTor(vocabularyList, smsWords)
-    print "数据标记完成！"
+    print "Data marked"
     # 转成array向量
     trainMarkedWords = np.array(trainMarkedWords)
-    print "数据转成矩阵！"
+    print "To matrix"
     pWordsSpamicity, pWordsHealthy, pSpam = \
         boostNaiveBayes.trainingNaiveBayes(trainMarkedWords, classLables)
 
@@ -58,12 +55,9 @@ def trainingAdaboostGetDS(iterateNum=40):
                 errorCount += 1
                 # alpha = (ph - ps) / ps
                 alpha = ps - ph
-                # if alpha < 0:  # 原先为spam，预测成ham， ERROR!
-                if alpha > 0: # 原先为ham，预测成spam
-                    DS[testWordsCount != 0] = np.abs(
-                            (DS[testWordsCount != 0] - np.exp(alpha)) / DS[testWordsCount != 0])
-                # else:  # 原先为ham，预测成spam，ERROR
-                else:  # 原先为spam，预测成ham
+                if alpha > 0: # actual: ham，predict: spam  !!!!serious problem, to make D smaller, so it's more likely to predict ham
+                    DS[testWordsCount != 0] = np.abs((DS[testWordsCount != 0] - np.exp(alpha)) / DS[testWordsCount != 0])
+                else:  # actual: spam，predict: ham, although a problem, need to make D bigger, so it's more likely to predict spam
                     DS[testWordsCount != 0] = (DS[testWordsCount != 0] + np.exp(alpha)) / DS[testWordsCount != 0]
         print 'DS:', DS
         errorRate = errorCount / testCount
@@ -71,7 +65,7 @@ def trainingAdaboostGetDS(iterateNum=40):
             minErrorRate = errorRate
             ds_errorRate['minErrorRate'] = minErrorRate
             ds_errorRate['DS'] = DS
-        print '第 %d 轮迭代，错误个数 %d ，错误率 %f' % (i, errorCount, errorRate)
+        print 'Iteration %d times，number of error prediction %d ，error rate: %f' % (i, errorCount, errorRate)
         if errorRate == 0.0:
             break
     ds_errorRate['vocabularyList'] = vocabularyList

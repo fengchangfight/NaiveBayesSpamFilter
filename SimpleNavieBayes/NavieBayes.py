@@ -101,7 +101,7 @@ def setOfWordsListToVecTor(vocabularyList, smsWordsList):
 def trainingNaiveBayes(trainMarkedWords, trainCategory):
     """
     calculate spamicity：P（Wi|S）
-    :param trainMarkedWords: 按照语料库标记的数据，二维数组
+    :param trainMarkedWords: marked 2d array data
     :param trainCategory:
     :return:
     """
